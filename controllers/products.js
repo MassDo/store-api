@@ -1,7 +1,7 @@
-const getProducts = (req, res) =>{
+const getProducts = async (req, res) =>{
     res.status(200).json({msg:'test all products'})
 }
-const getProductsStatic = (req, res) =>{
+const getProductsStatic = async (req, res) =>{
     res.status(200).json({msg:'test all products statics'})
 }
 module.exports = {
