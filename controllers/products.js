@@ -8,7 +8,7 @@ const getProductsStatic = async (req, res) =>{
 }
 const getProducts = async (req, res) =>{
     // filter for correct query fields
-    const {featured, company, name, sort, fields} = req.query
+    const {featured, company, name, sort, fields, numericFilters} = req.query
     const queryObject = {}
     if (featured){
         queryObject.featured = featured === "true" ? true : false
@@ -18,6 +18,25 @@ const getProducts = async (req, res) =>{
     }
     if (name){
         queryObject.name = {$regex:name, $options:'i'}
+    }
+    // numeric Filter
+    if (numericFilters){
+        const operatorMap = {
+            '>':'$gt',
+            '>=':'$gte',
+            '<':'$lt',
+            '<=':'$lte',
+            '=':'$eq',
+        }
+        const regEx = /\b(<|<=|>|>=|=)\b/g
+        let filters = numericFilters.replace(regEx, (match) => `-${operatorMap[match]}-`)
+        const options = ['price', 'rating']
+        filters = filters.split(',').forEach((item)=>{
+            const [field, operator, value] = item.split('-')
+            if (options.includes(field)){
+                queryObject[field] = {[operator]:Number(value)}
+            }
+        })
     }
     let searchResult = Product.find(queryObject)
     // select fields
@@ -31,7 +50,7 @@ const getProducts = async (req, res) =>{
         searchResult = searchResult.sort(sortStr)
     }else{
         searchResult = searchResult.sort('createdAt')
-    }
+    }    
     // pagination
     const page = Number(req.query.page) || 1
     const limit = Number(req.query.limit) || 10
